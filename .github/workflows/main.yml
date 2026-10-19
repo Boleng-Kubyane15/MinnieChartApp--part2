@@ -1,10 +1,6 @@
-name: Java CI with Ant
+name: Java CI
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: [push]
 
 jobs:
   build:
@@ -19,5 +15,22 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Build and Test with Ant
-      run: ant -noinput -buildfile build.xml test
+    - name: Download JUnit
+      run: |
+        curl -L -o junit.jar https://repo1.maven.org/maven2/junit/junit/4.13.2/junit-4.13.2.jar
+        curl -L -o hamcrest.jar https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
+        
+    - name: Compile Code
+      run: |
+        mkdir -p build
+        find src -name "*.java" > sources.txt
+        javac -cp "junit.jar:hamcrest.jar" -d build @sources.txt
+        
+    - name: Compile Tests
+      run: |
+        find test -name "*.java" > test_sources.txt
+        javac -cp "junit.jar:hamcrest.jar:build" -d build @test_sources.txt
+        
+    - name: Run Tests
+      run: |
+        java -cp "junit.jar:hamcrest.jar:build" org.junit.runner.JUnitCore minnie.part1.LoginTest MessageTest
